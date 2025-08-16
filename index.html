@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KMK 3x3 Macropad Online GUI Editor </title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #5f70b9 0%, #1e0735 100%);
+      min-height: 100vh; padding: 20px; color: #7b8aff;
+    }
+    .container { max-width: 1200px; margin: 0 auto; background: #16161e; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #7aa2f7 0%, #1a1b26 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { font-size: 2.2em; margin-bottom: 10px; }
+    .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 30px; }
+    .config-panel { background: #222637; border-radius: 8px; padding: 20px; }
+    .device-config { margin-bottom: 20px; }
+    .device-config label { display: block; margin-bottom: 6px; font-weight: 600; }
+    .device-config input { width: 100%; padding: 10px; border: 2px solid #2b3148; background:#191d2e; color:#c7d2fe; border-radius: 6px; font-size: 16px; }
+    .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+    .key-button { aspect-ratio: 1; background: linear-gradient(135deg, #050509 0%, #1e2951 100%); border: 3px solid #252b3e; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; transition: all .25s; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden; color:#e5e7eb; }
+    .key-button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+    .key-button.active { background: linear-gradient(136deg, #6554bc 0%, #06186e 100%); color: white; transform: scale(1.03); }
+    .key-number { font-size: 12px; font-weight: bold; opacity: 0.7; margin-bottom: 6px; }
+    .key-label { font-weight: 600; font-size: 14px; line-height: 1.2; }
+    .key-action { font-size: 11px; opacity: 0.85; margin-top: 4px; color:#9aa9ff; }
+    .config-form { background: #282f45; padding: 20px; border-radius: 8px; margin-top: 14px; border: 2px solid #222637; }
+    .config-form h3 { margin-bottom: 16px; color: #9ab0ff; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #2b3148; background:#191d2e; color:#e5e7eb; border-radius: 6px; font-size: 14px; }
+    .form-group textarea { resize: vertical; min-height: 60px; }
+    .modifier-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+    .modifier-checkbox { display: flex; gap: 8px; align-items: center; padding: 10px 12px; background: #1c2236; border: 2px solid #2b3148; border-radius: 6px; cursor: pointer; transition: all .2s; color:#dbe2ff; }
+    .modifier-checkbox.active { background: #4252aa; border-color: #4252aa; color: white; }
+    .modifier-checkbox input { width: auto; }
+    .output-panel { background: #222637; border-radius: 8px; padding: 20px; }
+    .output-panel h3 { margin-bottom: 16px; color: #9ab0ff; }
+    .code-output { background: #0f1117; color: #d4d4d4; font-family: Consolas, Monaco, 'Courier New', monospace; font-size: 12px; line-height: 1.45; padding: 18px; border-radius: 8px; max-height: 520px; overflow-y: auto; white-space: pre; }
+    .action-buttons { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+    .btn { padding: 10px 22px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all .2s; text-decoration: none; display: inline-block; text-align: center; }
+    .btn-primary { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
+    .status { padding: 10px; border-radius: 6px; margin: 10px 0; display: none; }
+    .status.success { background: #1c3d29; color: #b9ffd0; border: 1px solid #2f7a46; }
+    .status.error { background: #3d1c1c; color: #ffd0d0; border: 1px solid #7a2f2f; }
+    @media (max-width: 900px) { .main-content { grid-template-columns: 1fr; } .action-buttons { justify-content: center; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⌨️ KMK 3x3 Macropad Online GUI Editor</h1>
+      <p>Configure your 3×3 macropad right in the browser. No installation needed. <br><br>
+       </p>
+       <code> <i>For RP2040 macropad running KMK's latest version (as of May 2025). <br>
+        To get the latest version, visit: <a href="https://github.com/KMKfw/kmk_firmware/blob/main/docs/en/Getting_Started.md">KMK Getting Started</a>
+      </i></code>
+    </div>
+
+    <div class="main-content">
+      <div class="config-panel">
+        <div class="device-config">
+          <label for="deviceName">Device Name</label>
+          <input type="text" id="deviceName" placeholder="My 3x3 Macro Pad" />
+        </div>
+
+        <h3 style="color:#9ab0ff;">Keypad Layout</h3>
+        <div class="keypad-grid" id="keypadGrid"></div>
+
+        <div class="config-form" id="keyConfigForm" style="display:none;">
+          <h3>Configure Key <span id="currentKeyNum"></span></h3>
+          <div class="form-group">
+            <label for="keyLabel">Key Label</label>
+            <input type="text" id="keyLabel" placeholder="Enter key label" />
+          </div>
+
+          <div class="form-group">
+            <label for="keyAction">Key Action</label>
+            <select id="keyAction"></select>
+          </div>
+
+          <div class="form-group">
+            <label>Modifiers</label>
+            <div class="modifier-grid">
+              <div class="modifier-checkbox" data-mod="KC.LCTRL">
+                <input type="checkbox" id="mod-ctrl" />
+                <label for="mod-ctrl">Ctrl</label>
+              </div>
+              <div class="modifier-checkbox" data-mod="KC.LALT">
+                <input type="checkbox" id="mod-alt" />
+                <label for="mod-alt">Alt</label>
+              </div>
+              <div class="modifier-checkbox" data-mod="KC.LGUI">
+                <input type="checkbox" id="mod-gui" />
+                <label for="mod-gui">Win/Cmd</label>
+              </div>
+              <div class="modifier-checkbox" data-mod="KC.LSHIFT">
+                <input type="checkbox" id="mod-shift" />
+                <label for="mod-shift">Shift</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="keyDescription">Description (optional)</label>
+            <textarea id="keyDescription" placeholder="What does this key do?"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-panel">
+        <h3>Generated KMK Code</h3>
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="btn-generate">🔄 Generate Code</button>
+          <button class="btn btn-success" id="btn-copy">📋 Copy Code</button>
+          <button class="btn btn-secondary" id="btn-download">💾 Download</button>
+          <button class="btn btn-danger" id="btn-reset">🔄 Reset All</button>
+        </div>
+        <div id="status" class="status"></div>
+        <div class="code-output" id="codeOutput">Click "Generate Code" to see your KMK configuration...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ----------------------- Data & Defaults -----------------------
+    const DEFAULT_CONFIG = {
+      device_name: 'My 3x3 Macro Pad',
+      keys: [
+        { id: 0, label: 'Key 1', action: 'KC.A', modifiers: [], description: '' },
+        { id: 1, label: 'Key 2', action: 'KC.B', modifiers: [], description: '' },
+        { id: 2, label: 'Key 3', action: 'KC.C', modifiers: [], description: '' },
+        { id: 3, label: 'Key 4', action: 'KC.D', modifiers: [], description: '' },
+        { id: 4, label: 'Key 5', action: 'KC.E', modifiers: [], description: '' },
+        { id: 5, label: 'Key 6', action: 'KC.F', modifiers: [], description: '' },
+        { id: 6, label: 'Key 7', action: 'KC.G', modifiers: [], description: '' },
+        { id: 7, label: 'Key 8', action: 'KC.H', modifiers: [], description: '' },
+        { id: 8, label: 'Key 9', action: 'KC.I', modifiers: [], description: '' },
+      ],
+    };
+
+    const STORAGE_KEY = 'kmk_3x3_config_v1';
+    let currentConfig = null;
+    let selectedKeyIndex = -1;
+
+    // ----------------------- UI Setup -----------------------
+    const deviceNameInput = document.getElementById('deviceName');
+    const keypadGrid = document.getElementById('keypadGrid');
+    const keyConfigForm = document.getElementById('keyConfigForm');
+    const keyLabelInput = document.getElementById('keyLabel');
+    const keyActionSelect = document.getElementById('keyAction');
+    const keyDescTextarea = document.getElementById('keyDescription');
+
+    const statusEl = document.getElementById('status');
+    const codeOutput = document.getElementById('codeOutput');
+
+    // Populate key actions
+    function populateKeyActionOptions() {
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c => ({ value: `KC.${c}`, label: c }));
+      const numbers = [1,2,3,4,5,6,7,8,9,0].map(n => ({ value: `KC.N${n}`, label: String(n) }));
+      const functionKeys = Array.from({length: 12}, (_,i) => ({ value: `KC.F${i+1}`, label: `F${i+1}` }));
+      const special = [
+        ['KC.ENTER','Enter'],['KC.SPACE','Space'],['KC.TAB','Tab'],['KC.ESCAPE','Escape'],
+        ['KC.BACKSPACE','Backspace'],['KC.DELETE','Delete'],['KC.UP','Up'],['KC.DOWN','Down'],
+        ['KC.LEFT','Left'],['KC.RIGHT','Right'],['KC.HOME','Home'],['KC.END','End'],
+        ['KC.PAGE_UP','Page Up'],['KC.PAGE_DOWN','Page Down']
+      ].map(([value,label])=>({value,label}));
+      const media = [
+        ['KC.MEDIA_PLAY_PAUSE','Play/Pause'],['KC.MEDIA_NEXT_TRACK','Next'],['KC.MEDIA_PREV_TRACK','Previous'],
+        ['KC.AUDIO_VOL_UP','Volume Up'],['KC.AUDIO_VOL_DOWN','Volume Down'],['KC.AUDIO_MUTE','Mute']
+      ].map(([value,label])=>({value,label}));
+
+      const optGroups = [
+        { label: 'Letters', options: letters },
+        { label: 'Numbers', options: numbers },
+        { label: 'Function Keys', options: functionKeys },
+        { label: 'Special Keys', options: special },
+        { label: 'Media Keys', options: media },
+      ];
+
+      keyActionSelect.innerHTML = '';
+      optGroups.forEach(g => {
+        const og = document.createElement('optgroup');
+        og.label = g.label;
+        g.options.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.value; opt.textContent = o.label; og.appendChild(opt);
+        });
+        keyActionSelect.appendChild(og);
+      });
+    }
+
+    // ----------------------- Storage -----------------------
+    function loadConfig() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        currentConfig = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      } catch {
+        currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      }
+      updateUI();
+      generateCode();
+    }
+
+    function saveConfig() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentConfig));
+    }
+
+    function resetConfig() {
+      if (!confirm('Reset all configuration? This cannot be undone.')) return;
+      currentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      selectedKeyIndex = -1;
+      keyConfigForm.style.display = 'none';
+      updateUI();
+      generateCode();
+      saveConfig();
+      showStatus('Configuration reset to defaults', 'success');
+    }
+
+    // ----------------------- UI Logic -----------------------
+    function updateUI() {
+      deviceNameInput.value = currentConfig.device_name || '';
+      renderKeypad();
+    }
+
+    function renderKeypad() {
+      keypadGrid.innerHTML = '';
+      currentConfig.keys.forEach((key, index) => {
+        const div = document.createElement('div');
+        div.className = 'key-button' + (selectedKeyIndex === index ? ' active' : '');
+        div.onclick = () => selectKey(index);
+
+        const modText = key.modifiers.length ? key.modifiers.map(m => m.replace('KC.L','').replace('KC.R','')).join('+') + '+' : '';
+        div.innerHTML = `
+          <div class="key-number">${index + 1}</div>
+          <div class="key-label">${key.label}</div>
+          <div class="key-action">${modText}${key.action.replace('KC.', '')}</div>
+        `;
+        keypadGrid.appendChild(div);
+      });
+    }
+
+    function selectKey(index) {
+      selectedKeyIndex = index;
+      renderKeypad();
+      showKeyConfig();
+    }
+
+    function showKeyConfig() {
+      const key = currentConfig.keys[selectedKeyIndex];
+      document.getElementById('currentKeyNum').textContent = selectedKeyIndex + 1;
+      keyLabelInput.value = key.label;
+      keyActionSelect.value = key.action;
+      keyDescTextarea.value = key.description || '';
+      // set modifiers
+      document.querySelectorAll('.modifier-checkbox').forEach(el => {
+        const mod = el.getAttribute('data-mod');
+        const checked = key.modifiers.includes(mod);
+        el.classList.toggle('active', checked);
+        el.querySelector('input').checked = checked;
+      });
+      keyConfigForm.style.display = 'block';
+    }
+
+    // Modifier toggles
+    document.querySelectorAll('.modifier-checkbox').forEach(el => {
+      el.addEventListener('click', () => {
+        if (selectedKeyIndex === -1) return;
+        const mod = el.getAttribute('data-mod');
+        const key = currentConfig.keys[selectedKeyIndex];
+        const idx = key.modifiers.indexOf(mod);
+        if (idx > -1) key.modifiers.splice(idx, 1); else key.modifiers.push(mod);
+        showKeyConfig();
+        renderKeypad();
+        saveConfig();
+      });
+    });
+
+    // Inputs change
+    deviceNameInput.addEventListener('change', () => { currentConfig.device_name = deviceNameInput.value; saveConfig(); });
+    keyLabelInput.addEventListener('change', () => { if (selectedKeyIndex<0) return; currentConfig.keys[selectedKeyIndex].label = keyLabelInput.value; renderKeypad(); saveConfig(); });
+    keyActionSelect.addEventListener('change', () => { if (selectedKeyIndex<0) return; currentConfig.keys[selectedKeyIndex].action = keyActionSelect.value; renderKeypad(); saveConfig(); });
+    keyDescTextarea.addEventListener('change', () => { if (selectedKeyIndex<0) return; currentConfig.keys[selectedKeyIndex].description = keyDescTextarea.value; saveConfig(); });
+
+    // ----------------------- Code Generation -----------------------
+    function showStatus(message, type) {
+      statusEl.textContent = message; statusEl.className = `status ${type}`; statusEl.style.display = 'block';
+      clearTimeout(showStatus._t);
+      showStatus._t = setTimeout(() => statusEl.style.display = 'none', 2500);
+    }
+
+    // Known friendly macro names (Windows-style)
+    function friendlyMacroName(mods, action) {
+      const onlyCtrl = mods.length === 1 && mods[0] === 'KC.LCTRL';
+      const act = action.replace('KC.','');
+      if (onlyCtrl && act === 'A') return 'SELECT_ALL';
+      if (onlyCtrl && act === 'C') return 'COPY';
+      if (onlyCtrl && act === 'V') return 'PASTE';
+      if (onlyCtrl && act === 'X') return 'CUT';
+      if (onlyCtrl && act === 'Z') return 'UNDO';
+      if (onlyCtrl && act === 'Y') return 'REDO';
+      return null;
+    }
+
+    function getBaseMacroName(mods, action) {
+      const name = friendlyMacroName(mods, action);
+      if (name) return name;
+      const modsClean = mods.map(m => m.replace('KC.L','').replace('KC.R','')).join('_');
+      const actionClean = action.replace('KC.','');
+      return `${modsClean}_${actionClean}`.toUpperCase();
+    }
+
+    function formatMacroCode(mods, keycode) {
+      const lines = [];
+      mods.forEach(mod => lines.push(`    Press(${mod}),`));
+      lines.push('    Delay(30),');
+      lines.push(`    Tap(${keycode}),`);
+      lines.push('    Delay(30),');
+      [...mods].reverse().forEach(mod => lines.push(`    Release(${mod}),`));
+      return `KC.MACRO(\n${lines.join('\n')}\n)`;
+    }
+
+    function generateKMKCode() {
+      // Build macro map
+      const macroDefs = new Map(); // key: baseName, val: { varName, code }
+      const macroVarUsed = new Map();
+
+      // First pass: collect unique macros & assign names
+      currentConfig.keys.forEach(k => {
+        if (k.modifiers && k.modifiers.length) {
+          const base = getBaseMacroName(k.modifiers, k.action);
+          if (!macroDefs.has(base)) {
+            const code = formatMacroCode(k.modifiers, k.action);
+            macroDefs.set(base, { varName: base, code });
+            macroVarUsed.set(base, false);
+          }
+        }
+      });
+
+      // Prepare macro definitions text
+      let macrosBlock = '';
+      if (macroDefs.size) {
+        macrosBlock += '\n# Macro definitions:\n';
+        for (const [base, { varName, code }] of macroDefs.entries()) {
+          macrosBlock += `${varName} = ${code}\n\n`;
+        }
+      }
+
+      // Create keymap (single inner list with 9 items)
+      const rowItems = [];
+      for (let i = 0; i < 9; i++) {
+        const key = currentConfig.keys[i];
+        if (!key) { rowItems.push('KC.NO'); continue; }
+        if (key.modifiers && key.modifiers.length) {
+          const base = getBaseMacroName(key.modifiers, key.action);
+          const varName = (macroDefs.get(base) || {}).varName || base;
+          macroVarUsed.set(base, true);
+          rowItems.push(varName);
+        } else {
+          rowItems.push(key.action);
+        }
+      }
+
+      const keymapBlock = `\n# Keymap\nkeyboard.keymap = [\n    [\n        ${rowItems.join(', ')},\n    ],\n]\n`;
+
+      // Header & descriptions
+      let descBlock = '# Key descriptions:\n';
+      currentConfig.keys.forEach((key, i) => {
+        const mods = (key.modifiers || []).map(m=>m.replace('KC.L','').replace('KC.R','')).join('+');
+        const action = key.action.replace('KC.','');
+        const full = mods ? `${mods}+${action}` : action;
+        const label = key.description || key.label || `Key ${i+1}`;
+        descBlock += `# Key ${i+1}: ${label} (${full})\n`;
+      });
+
+      const header = `# KMK Configuration for ${currentConfig.device_name}\n# Generated by Respawn Interactive's online KMK Macropad Editor\n\nimport board\nfrom kmk.kmk_keyboard import KMKKeyboard\nfrom kmk.keys import KC\nfrom kmk.modules.macros import Macros, Press, Release, Tap, Delay\nfrom kmk.scanners import DiodeOrientation\n\nkeyboard = KMKKeyboard()\nkeyboard.modules.append(Macros())\n\n# Pin configuration\nkeyboard.col_pins = (board.GP3, board.GP4, board.GP5,)\nkeyboard.row_pins = (board.GP8, board.GP7, board.GP6,)\nkeyboard.diode_orientation = DiodeOrientation.ROW2COL\n\n`;
+
+      const footer = `\nif __name__ == '__main__':\n    keyboard.go()\n`;
+
+      return header + descBlock + macrosBlock + keymapBlock + footer;
+    }
+
+    // ----------------------- Actions -----------------------
+    function generateCode() {
+      const code = generateKMKCode();
+      codeOutput.textContent = code;
+      showStatus('Code generated successfully!', 'success');
+    }
+
+    function copyToClipboard() {
+      navigator.clipboard.writeText(codeOutput.textContent)
+        .then(()=> showStatus('Code copied to clipboard!', 'success'))
+        .catch(()=> showStatus('Failed to copy to clipboard', 'error'));
+    }
+
+    function downloadCode() {
+      const blob = new Blob([codeOutput.textContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'code.py';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showStatus('Code downloaded as main.py', 'success');
+    }
+
+    // ----------------------- Bindings & Init -----------------------
+    document.getElementById('btn-generate').addEventListener('click', generateCode);
+    document.getElementById('btn-copy').addEventListener('click', copyToClipboard);
+    document.getElementById('btn-download').addEventListener('click', downloadCode);
+    document.getElementById('btn-reset').addEventListener('click', resetConfig);
+
+    populateKeyActionOptions();
+    loadConfig();
+  </script>
+</body>
+<footer style="text-align:center; margin-top:2rem; font-size:0.85rem; color:#777;">
+  Made with ☕ & ✨ by <a href="https://github.com/respawnin" target="_blank" style="color:inherit;">Michelle Lye</a>. 
+  View source on <a href="https://github.com/respawnin/3x3MacroPadGUI" target="_blank" style="color:inherit;">GitHub</a>.
+</footer>
+
+</html>
