@@ -11,8 +11,15 @@
       background: linear-gradient(135deg, #5f70b9 0%, #1e0735 100%);
       min-height: 100vh; padding: 20px; color: #7b8aff;
     }
+    a {
+      color: rgba(255, 255, 251, 0.874);
+      font-weight: bold;
+    }
+    a:hover {
+      background-color: #271c64;
+    }
     .container { max-width: 1200px; margin: 0 auto; background: #16161e; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
-    .header { background: linear-gradient(135deg, #7aa2f7 0%, #1a1b26 100%); color: white; padding: 30px; text-align: center; }
+    .header { background: linear-gradient(135deg, #7aa2f7 0%, #1e246ad7 100%); color: white; padding: 30px; text-align: center; }
     .header h1 { font-size: 2.2em; margin-bottom: 10px; }
     .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 30px; }
     .config-panel { background: #222637; border-radius: 8px; padding: 20px; }
@@ -59,11 +66,14 @@
       <p>Configure your 3×3 macropad right in the browser. No installation needed. <br><br>
        </p>
        <code> <i>For RP2040 macropad running KMK's latest version (as of May 2025). <br>
-        To get the latest version, visit: <a href="https://github.com/KMKfw/kmk_firmware/blob/main/docs/en/Getting_Started.md">KMK Getting Started</a>
+        Click here to get a <a href="https://github.com/respawnin/3x3MacroPadGUI/raw/refs/heads/main/3x3_MacroPad_FW.zip">Working Example</a>
       </i></code>
+      
+    
     </div>
 
     <div class="main-content">
+
       <div class="config-panel">
         <div class="device-config">
           <label for="deviceName">Device Name</label>
@@ -419,7 +429,24 @@
     loadConfig();
   </script>
 </body>
-<footer style="text-align:center; margin-top:2rem; font-size:0.85rem; color:#777;">
+<section style="margin: 1.5rem auto; max-width: 800px; text-align: left; font-size: 0.95rem; color: #ddd;">
+  <h2 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #fff;">How to Use</h2>
+  <p style="line-height: 1.6;">
+      1. Select a key from the grid.<br>
+      2. Choose an action or create a macro (e.g. <code>Ctrl + C</code>).<br>
+      3. Add descriptions or labels if needed.<br>
+      4. Click <strong>Generate Code</strong> to produce a KMK firmware script.<br>
+      5. Copy the output into your keypad’s code.py file and save it to your device(look for the drive called CIRCUITPY).
+  <br><br>
+  </p>
+  <br>
+  <h2 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #fff;">Help</h2>
+  <p style="line-height: 1.6;">
+      1. Ensure that you have the latest version of KMK firmware installed on your device. 
+      <a href="https://github.com/respawnin/3x3MacroPadGUI/raw/refs/heads/main/3x3_MacroPad_FW.zip">Here's a working example</a>
+  </p>
+</section>
+<footer style="text-align:center; margin-top:2rem; font-size:0.85rem; color:#826fef; background-color:#2c2c50;"   >
   Made with ☕ & ✨ by <a href="https://github.com/respawnin" target="_blank" style="color:inherit;">Michelle Lye</a>. 
   View source on <a href="https://github.com/respawnin/3x3MacroPadGUI" target="_blank" style="color:inherit;">GitHub</a>.
 </footer>
